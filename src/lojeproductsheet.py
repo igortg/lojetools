@@ -41,11 +41,15 @@ class LojeProductSheet(object):
     def GenerateLojeProductSheet(self, product_ident_list, start_index):
         unity = "pç"
         sheet = []
+        previous_product_ident = None
         product_ident_list.sort()
+        product_index = start_index - 1
         for i, product_ident in enumerate(product_ident_list):
             row = {}
-            row[self.ID_HEADER] = start_index
-            row[self.BARCODE_HEADER] = "%06d" %start_index
+            if product_ident != previous_product_ident:
+                product_index += 1            
+            row[self.ID_HEADER] = product_index
+            row[self.BARCODE_HEADER] = "%06d" %product_index
             row[self.IDENT_HEADER] = product_ident.upper()
             try:
                 category = self._primary_category_list[product_ident[0].lower()]
@@ -67,8 +71,8 @@ class LojeProductSheet(object):
             except KeyError:
                 raise ProductCodeError(product_ident[1:3], i)
             row["descricao"] = "%s %s" %(category, sec_category)
-            start_index += 1
             sheet.append(row)
+            previous_product_ident = product_ident
         return sheet
     
     

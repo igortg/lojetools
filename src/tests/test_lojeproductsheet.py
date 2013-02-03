@@ -10,13 +10,19 @@ class TestLojeProductSheet(unittest.TestCase):
     def testGenerateLojeProductSheet(self):
         
         test_list = [
+         "pcb00235",
          "b2e00300",
          "abl00145",
-         "pcb00235"
+         "pcb00235",
+         "abl00145",
         ]
         
         lps = LojeProductSheet("lps.ini")
         sheet = lps.GenerateLojeProductSheet(test_list, 10)
+        self.assertEqual(sheet[0][lps.IDENT_HEADER], "ABL00145")
+        self.assertEqual(sheet[1][lps.ID_HEADER], 10)
+        self.assertEqual(sheet[3][lps.ID_HEADER], 12)
+        self.assertEqual(sheet[4][lps.ID_HEADER], 12)
         lps.GenerateBarcodesPrn(sheet, "lps")
         
         
@@ -35,8 +41,8 @@ class TestLojeProductSheet(unittest.TestCase):
     def test(self):
         d2 = ord('z') - ord('a')
         d1 = ord('c') - ord('a')
-        print d2, d1
-        print d2 * 26 + d1 * 1
+        d2, d1
+        d2 * 26 + d1 * 1
 
 
 
