@@ -37,6 +37,19 @@ class TestLojeProductSheet(unittest.TestCase):
         lps = LojeProductSheet("lps.ini")
         self.assertRaises(ProductCodeError, lps.GenerateLojeProductSheet, test_list, 10)
 
+        
+    def testPrintLabels(self):
+        
+        test_list = [
+         "pcb00235",
+         "b2e00300",
+         "abl00145",
+         ]
+        
+        lps = LojeProductSheet("lps.ini")
+        sheet = lps.GenerateLojeProductSheet(test_list, 10)
+        lps.GenerateEpl(sheet)
+
 
     def test(self):
         d2 = ord('z') - ord('a')

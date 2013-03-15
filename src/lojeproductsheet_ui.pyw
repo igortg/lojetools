@@ -51,11 +51,7 @@ class LojeProductSheetUI(ttk.Frame):
         if not content:
             tkMessageBox.showerror(title, "Lista de Produtos vazia!", parent=self)
             return
-        initial_barcode = tkSimpleDialog.askinteger(
-            title, 
-            "Digite o Código de Barras Inicial",
-            initialvalue=self.AcquireInitialBarcode(),
-            parent=self)
+        initial_barcode = self.AksInitialBarcode()
         if not initial_barcode:
             return
 
@@ -69,12 +65,33 @@ class LojeProductSheetUI(ttk.Frame):
         if not filename:
             return
         self._last_dir = os.path.dirname(filename)
+        self.PrintLabels(lps, sheet)
         lps.WriteSheet(sheet, filename)
-        lps.GenerateBarcodesPrn(sheet, filename)
         self.WriteInitialBarcode(int(sheet[-1]['codbar']) + 1)
         tkMessageBox.showinfo(title, "Arquivo criado com sucesso!")
         
         
+    def PrintLabels(self, lps, sheet):
+        batch_size = 30
+        batch_num = len(sheet) / batch_size
+        for i in range(batch_num):
+            start = i * batch_size
+            end = (i + 1) * batch_size
+            part_sheet = sheet[start:end]
+            epl = lps.GenerateEpl(part_sheet)
+            lps.SentToPrinter(epl)
+            tkMessageBox.askokcancel("Gerar Saída", "Imprimir mais %d etiquetas?" %batch_size)
+        
+    
+    def AksInitialBarcode(self):
+        initial_barcode = tkSimpleDialog.askinteger(
+            "Gerar Saída", 
+            "Digite o Código de Barras Inicial", 
+            initialvalue=self.AcquireInitialBarcode(), 
+            parent=self)
+        return initial_barcode
+    
+    
     def AcquireInitialBarcode(self):
         if not os.path.isfile(self._barcode_filename):
             self.WriteInitialBarcode(1)

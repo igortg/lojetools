@@ -1,6 +1,7 @@
 #-*- coding: latin1 -*-
 from ConfigParser import ConfigParser
 from string import Template
+from StringIO import StringIO
 import csv
 import locale
 
@@ -33,7 +34,7 @@ class LojeProductSheet(object):
         for opt in sorted(cfg_parser.options(self.PRICE_SEC)):
             self._price_list.append(cfg_parser.getfloat(self.PRICE_SEC, opt))
         
-        self._label_header = cfg_parser.get("Label", "header")
+        self._label_header = cfg_parser.get("Label", "header").replace("\\n","\n")
         self._label_template = cfg_parser.get("Label", "label")
         self._labels_per_file = 30
         
@@ -102,6 +103,22 @@ class LojeProductSheet(object):
             writer.writeheader()
             writer.writerows(sheet)
             
+            
+    def GenerateEpl(self, loje_product_sheet):
+        stream = StringIO()
+        header = self._label_header + "\n"
+        stream.write(header)
+        for row in loje_product_sheet:
+            label = self._GeneratePrnLabel(row) + "\n"
+            stream.write(label)
+        return stream.getvalue()        
+            
+            
+    def SentToPrinter(self, epl_code):
+        from zebra import zebra
+        zebra = zebra('')
+        zebra.output(epl_code)
+        
 
     def GenerateBarcodesPrn(self, loje_product_sheet, out_basename):
         file_index = 0
@@ -113,7 +130,7 @@ class LojeProductSheet(object):
                     prn_file.close()
                 prn_filename = out_basename + "-%02d.epl" %file_index
                 prn_file = open(prn_filename, "w")
-                prn_file.write(self._label_header.replace("\\n","\n") + "\n")
+                prn_file.write(self._label_header + "\n")
             prn_file.write(self._GeneratePrnLabel(row) + "\n")
 
 
