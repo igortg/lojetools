@@ -4,7 +4,7 @@ Created on 30/12/2012
 
 @author: igor
 '''
-from lojeproductsheet import LojeProductSheet, ProductCodeError
+from lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import Tkinter as ttk
 import os
 import tkFileDialog
@@ -33,8 +33,10 @@ class LojeProductSheetUI(ttk.Frame):
         fr = ttk.Frame(self)
         fr.grid(column=0, row=1, sticky=ttk.W)
         
-        btn = ttk.Button(self, text="Gerar Saída", command=self.GenerateSheet)
-        btn.grid(column=1, row=1, sticky=ttk.E)
+        btn_print = ttk.Button(self, text="Imprimir de Arquivo", command=self.PrintFromFile)
+        btn_print.grid(column=0, row=1, sticky=ttk.E)
+        btn_gen = ttk.Button(self, text="Gerar Saída", command=self.GenerateSheet)
+        btn_gen.grid(column=1, row=1, sticky=ttk.E)
         
         for child in self.winfo_children():
             child.grid_configure(padx=5, pady=5)
@@ -44,71 +46,90 @@ class LojeProductSheetUI(ttk.Frame):
         self._barcode_filename = os.path.join(app_dirname, "barcode")
         self._config_filename = os.path.join(app_dirname, "lps.ini")
 
-
+        
     def GenerateSheet(self):
-        title = "Gerar Saída"
+        if not self._IsInputValid(): return
+        initial_barcode = self._AksInitialBarcode()
+        if not initial_barcode: return
         content = self.products_entry.get(1.0, ttk.END)
-        if not content:
-            tkMessageBox.showerror(title, "Lista de Produtos vazia!", parent=self)
-            return
-        initial_barcode = self.AksInitialBarcode()
-        if not initial_barcode:
-            return
-
-        lps = LojeProductSheet(self._config_filename)
+        lps = LojeProductGenerator(self._config_filename)
         try:
             sheet = lps.GenerateLojeProductSheet(content.split(), initial_barcode)
         except ProductCodeError, exc:
-            tkMessageBox.showerror(title, exc)
+            tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
         filename = tkFileDialog.asksaveasfilename(initialdir=self._last_dir, title="", parent=self)
-        if not filename:
-            return
+        if not filename: return
         self._last_dir = os.path.dirname(filename)
-        self.PrintLabels(lps, sheet)
         lps.WriteSheet(sheet, filename)
-        self.WriteInitialBarcode(int(sheet[-1]['codbar']) + 1)
-        tkMessageBox.showinfo(title, "Arquivo criado com sucesso!")
+        self._WriteInitialBarcode(int(sheet[-1]['codbar']) + 1)
+        answ_print = tkMessageBox.askyesno(self.MSG_TITLE, self.MSG_ASK_PRINT)
+        if answ_print:
+            self._PrintLabels(lps, sheet)
+            
+            
+    def PrintFromFile(self):
+        sheet_filename = tkFileDialog.askopenfilename()
+        if not sheet_filename: return
+        lps = LojeProductGenerator(self._config_filename)
+        sheet = lps.LoadSheet(sheet_filename)
+        self._PrintLabels(lps, sheet)
         
         
-    def PrintLabels(self, lps, sheet):
+        
+    def _IsInputValid(self):
+        content = self.products_entry.get(1.0, ttk.END)
+        if not content.strip():
+            tkMessageBox.showerror(self.MSG_TITLE, "Lista de Produtos vazia!", parent=self)
+            return False
+        return True
+        
+
+    def _PrintLabels(self, lps, sheet):
         batch_size = 30
-        batch_num = len(sheet) / batch_size
+        batch_num = (len(sheet) - 1) / batch_size + 1
         for i in range(batch_num):
             start = i * batch_size
             end = (i + 1) * batch_size
             part_sheet = sheet[start:end]
-            epl = lps.GenerateEpl(part_sheet)
-            lps.SentToPrinter(epl)
-            tkMessageBox.askokcancel("Gerar Saída", "Imprimir mais %d etiquetas?" %batch_size)
+            lps.PrintSheet(part_sheet)
+            if i < batch_num - 1:
+                tkMessageBox.askokcancel(self.MSG_TITLE, self.MSG_ASK_PRINT_MORE %batch_size)
         
     
-    def AksInitialBarcode(self):
+    def _AksInitialBarcode(self):
         initial_barcode = tkSimpleDialog.askinteger(
-            "Gerar Saída", 
-            "Digite o Código de Barras Inicial", 
-            initialvalue=self.AcquireInitialBarcode(), 
+            self.MSG_TITLE, 
+            self.MSG_TYPE_BARCODE, 
+            initialvalue=self._AcquireInitialBarcode(), 
             parent=self)
         return initial_barcode
     
     
-    def AcquireInitialBarcode(self):
+    def _AcquireInitialBarcode(self):
         if not os.path.isfile(self._barcode_filename):
-            self.WriteInitialBarcode(1)
+            self._WriteInitialBarcode(1)
         with open(self._barcode_filename) as barcode_file:
             return int(barcode_file.read().strip())
                 
                 
-    def WriteInitialBarcode(self, barcode):
+    def _WriteInitialBarcode(self, barcode):
         with open(self._barcode_filename, 'w') as barcode_file:
             barcode_file.write('%d' %barcode)
+
+
+    MSG_ASK_PRINT = "Arquivo criado com sucesso. Deseja imprimir etiquetas?"
+    MSG_TYPE_BARCODE = "Digite o Código de Barras Inicial"
+    MSG_ASK_PRINT_MORE = "Imprimir mais %d etiquetas?"
+    MSG_TITLE = "Entrade de Produtos Loje"
+
 
 #===================================================================================================
 # main
 #===================================================================================================
 if __name__ == '__main__':    
     root = ttk.Tk()
-    root.title("Entrade de Produtos Loje")
+    root.title(LojeProductSheetUI.MSG_TITLE)
     root.columnconfigure(0, weight=1)
     root.rowconfigure(0, weight=1)
     mainframe = LojeProductSheetUI(root)

@@ -1,13 +1,13 @@
-from lojeproductsheet import LojeProductSheet, ProductCodeError
+from lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import unittest
 
 
 #===================================================================================================
 # TestLojeProductSheet
 #===================================================================================================
-class TestLojeProductSheet(unittest.TestCase):
+class TestLojeProductGenerator(unittest.TestCase):
     
-    def testGenerateLojeProductSheet(self):
+    def testGenerateLojeProducts(self):
         
         test_list = [
          "pcb00235",
@@ -17,13 +17,13 @@ class TestLojeProductSheet(unittest.TestCase):
          "abl00145",
         ]
         
-        lps = LojeProductSheet("lps.ini")
+        lps = LojeProductGenerator("lps.ini")
         sheet = lps.GenerateLojeProductSheet(test_list, 10)
         self.assertEqual(sheet[0][lps.IDENT_HEADER], "ABL00145")
         self.assertEqual(sheet[1][lps.ID_HEADER], 10)
         self.assertEqual(sheet[3][lps.ID_HEADER], 12)
         self.assertEqual(sheet[4][lps.ID_HEADER], 12)
-        lps.GenerateBarcodesPrn(sheet, "lps")
+        lps._GenerateEplFile(sheet, "lps")
         
         
     def testGenerateLojeProductSheetErrorHandling(self):
@@ -34,7 +34,7 @@ class TestLojeProductSheet(unittest.TestCase):
          "pcb00235"
         ]
         
-        lps = LojeProductSheet("lps.ini")
+        lps = LojeProductGenerator("lps.ini")
         self.assertRaises(ProductCodeError, lps.GenerateLojeProductSheet, test_list, 10)
 
         
@@ -46,9 +46,18 @@ class TestLojeProductSheet(unittest.TestCase):
          "abl00145",
          ]
         
-        lps = LojeProductSheet("lps.ini")
+        lps = LojeProductGenerator("lps.ini")
         sheet = lps.GenerateLojeProductSheet(test_list, 10)
-        lps.GenerateEpl(sheet)
+        lps._GenerateEpl(sheet)
+        
+        
+    def testLoadSheet(self):
+        sheet_filename = "test.out.csv"
+        lps = LojeProductGenerator("lps.ini")
+        sheet = lps.LoadSheet(sheet_filename)
+        self.assertEqual(sheet[0]['codbar'], "000300")
+        self.assertEqual(sheet[1]['codbar'], "000301")
+        
 
 
     def test(self):

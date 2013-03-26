@@ -7,9 +7,9 @@ import locale
 
 
 #===================================================================================================
-# LojeProductSheet
+# LojeProductGenerator
 #===================================================================================================
-class LojeProductSheet(object):
+class LojeProductGenerator(object):
     
     PRICE_SEC = "Preco"
     PRIMARY_CATEGORY_SEC = "Categoria1"
@@ -21,6 +21,20 @@ class LojeProductSheet(object):
     IDENT_HEADER = "identificacao"
     ID_HEADER = "id"
     CATEGORY_HEADER = "categoria"
+    
+    HEADER_LIST = [
+        ID_HEADER,
+        BARCODE_HEADER,
+        IDENT_HEADER,
+        CATEGORY_HEADER,
+        "unidade compra",
+        "unidade venda",
+        "custo",
+        "preco",
+        "preco2",
+        "estoque",
+        "descricao",            
+        ]
 
     
     def __init__(self, config_filename):
@@ -78,24 +92,10 @@ class LojeProductSheet(object):
     
     
     def WriteSheet(self, sheet, out_filename):
-        header_list = [
-            self.ID_HEADER,
-            self.BARCODE_HEADER,
-            self.IDENT_HEADER,
-            self.CATEGORY_HEADER,
-            "unidade compra",
-            "unidade venda",
-            "custo",
-            "preco",
-            "preco2",
-            "estoque",
-            "descricao",            
-        ]
-        
         with open(out_filename, 'w') as out_file:           
             writer = csv.DictWriter(
                 out_file,
-                header_list,
+                self.HEADER_LIST,
                 delimiter=self.CSV_DELIMITER,
                 lineterminator="\n",
                 quoting=csv.QUOTE_ALL 
@@ -103,24 +103,43 @@ class LojeProductSheet(object):
             writer.writeheader()
             writer.writerows(sheet)
             
+
+    @classmethod            
+    def LoadSheet(cls, sheet_filename):
+        with open(sheet_filename) as sheet_file:
+            reader = csv.DictReader(
+                sheet_file,
+                cls.HEADER_LIST,
+                delimiter=cls.CSV_DELIMITER,
+                lineterminator="\n",
+                quoting=csv.QUOTE_ALL,
+                )
+            sheet = [line for line in reader]
+            return sheet[1:] #Discart header line
+                
+                
+    def PrintSheet(self, loje_product_sheet):
+        epl_code = self._GenerateEpl(loje_product_sheet)
+        self._SentToPrinter(epl_code)
             
-    def GenerateEpl(self, loje_product_sheet):
+            
+    def _GenerateEpl(self, loje_product_sheet):
         stream = StringIO()
         header = self._label_header + "\n"
         stream.write(header)
         for row in loje_product_sheet:
-            label = self._GeneratePrnLabel(row) + "\n"
+            label = self._GeneratLabelEpl(row) + "\n"
             stream.write(label)
         return stream.getvalue()        
             
             
-    def SentToPrinter(self, epl_code):
+    def _SentToPrinter(self, epl_code):
         from zebra import zebra
-        zebra = zebra('')
+        zebra = zebra('ZDesigner TLP 2844')
         zebra.output(epl_code)
         
 
-    def GenerateBarcodesPrn(self, loje_product_sheet, out_basename):
+    def _GenerateEplFile(self, loje_product_sheet, out_basename):
         file_index = 0
         prn_file = None
         for i, row in enumerate(loje_product_sheet):
@@ -131,10 +150,10 @@ class LojeProductSheet(object):
                 prn_filename = out_basename + "-%02d.epl" %file_index
                 prn_file = open(prn_filename, "w")
                 prn_file.write(self._label_header + "\n")
-            prn_file.write(self._GeneratePrnLabel(row) + "\n")
+            prn_file.write(self._GeneratLabelEpl(row) + "\n")
 
 
-    def _GeneratePrnLabel(self, row):
+    def _GeneratLabelEpl(self, row):
         template = Template(self._label_template)
         return template.substitute(**row)
 
