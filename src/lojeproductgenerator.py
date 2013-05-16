@@ -33,7 +33,8 @@ class LojeProductGenerator(object):
         "preco",
         "preco2",
         "estoque",
-        "descricao",            
+        "descricao",
+        "fabricante"            
         ]
 
     
@@ -53,7 +54,7 @@ class LojeProductGenerator(object):
         self._labels_per_file = 30
         
         
-    def GenerateLojeProductSheet(self, product_ident_list, start_index):
+    def GenerateLojeProductSheet(self, product_ident_list, start_index, manufacturer=""):
         unity = "pç"
         sheet = []
         previous_product_ident = None
@@ -85,7 +86,8 @@ class LojeProductGenerator(object):
                 sec_category = self._secondary_category_list[product_ident[1:3].lower()]
             except KeyError:
                 raise ProductCodeError(product_ident[1:3], i)
-            row["descricao"] = "%s %s" %(category, sec_category)
+            row["descricao"] = "%s" %(sec_category)
+            row["fabricante"] = manufacturer
             sheet.append(row)
             previous_product_ident = product_ident
         return sheet

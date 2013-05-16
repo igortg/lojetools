@@ -23,10 +23,18 @@ class LojeProductSheetUI(ttk.Frame):
         self.grid(column=0, row=0, sticky=ttk.NSEW)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        
         font = tkFont.Font(family='Simplified Arabic Fixed', size=11)
+
+        manuf_frame = ttk.Frame(self)
+        manuf_frame.grid(row=0, columnspan=2, stick=ttk.W)
+        manuf_label = ttk.Label(manuf_frame, text="Fábrica")
+        manuf_label.pack(side=ttk.LEFT)
+        self.manuf_entry = manuf_entry = ttk.Entry(manuf_frame, font=font)
+        manuf_entry.pack(side=ttk.LEFT)
+        manuf_frame.pack()
+
         products_entry = ttk.Text(self, font=font)
-        products_entry.grid(row=0, columnspan=2, sticky=(ttk.NSEW))
+        products_entry.grid(row=1, columnspan=2, sticky=(ttk.NSEW))
         self.products_entry = products_entry
              
         #unused frame  
@@ -34,9 +42,9 @@ class LojeProductSheetUI(ttk.Frame):
         fr.grid(column=0, row=1, sticky=ttk.W)
         
         btn_print = ttk.Button(self, text="Imprimir de Arquivo", command=self.PrintFromFile)
-        btn_print.grid(column=0, row=1, sticky=ttk.E)
+        btn_print.grid(column=0, row=2, sticky=ttk.E)
         btn_gen = ttk.Button(self, text="Gerar Saída", command=self.GenerateSheet)
-        btn_gen.grid(column=1, row=1, sticky=ttk.E)
+        btn_gen.grid(column=1, row=2, sticky=ttk.E)
         
         for child in self.winfo_children():
             child.grid_configure(padx=5, pady=5)
@@ -51,10 +59,11 @@ class LojeProductSheetUI(ttk.Frame):
         if not self._IsInputValid(): return
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
+        manufacturer = self.manuf_entry.get()
         content = self.products_entry.get(1.0, ttk.END)
         lps = LojeProductGenerator(self._config_filename)
         try:
-            sheet = lps.GenerateLojeProductSheet(content.split(), initial_barcode)
+            sheet = lps.GenerateLojeProductSheet(content.split(), initial_barcode, manufacturer)
         except ProductCodeError, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
