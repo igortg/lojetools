@@ -43,14 +43,15 @@ class LojeProductGenerator(object):
         cfg_parser = ConfigParser()
         cfg_parser.read(config_filename)
         
-        self._primary_category_list = dict(cfg_parser.items(self.PRIMARY_CATEGORY_SEC))
-        self._secondary_category_list = dict(cfg_parser.items(self.SECONDARY_CATEGORY_SEC))
+        self._primary_categories = dict(cfg_parser.items(self.PRIMARY_CATEGORY_SEC))
+        self._secondary_categories = dict(cfg_parser.items(self.SECONDARY_CATEGORY_SEC))
         self._price_list = []
         for opt in sorted(cfg_parser.options(self.PRICE_SEC)):
             self._price_list.append(cfg_parser.getfloat(self.PRICE_SEC, opt))
         
         self._label_header = cfg_parser.get("Label", "header").replace("\\n","\n")
         self._label_template = cfg_parser.get("Label", "label")
+        self._printer_name = cfg_parser.get("Impressora", "nome")
         self._labels_per_file = 30
         
         
@@ -68,7 +69,7 @@ class LojeProductGenerator(object):
             row[self.BARCODE_HEADER] = "%06d" %product_index
             row[self.IDENT_HEADER] = product_ident.upper()
             try:
-                category = self._primary_category_list[product_ident[0].lower()]
+                category = self._primary_categories[product_ident[0].lower()]
             except KeyError:
                 raise ProductCodeError(product_ident[0], i)
             row[self.CATEGORY_HEADER] = category
@@ -76,14 +77,14 @@ class LojeProductGenerator(object):
             row["unidade venda"] = unity
             price = float(product_ident[3:]) / 10.
             cost = price / self._price_list[0]
-            price2 = price * self._price_list[1]
+            price2 = cost * self._price_list[1]
             
             row["custo"] = locale.str(round(cost, 2))
             row["preco"] = locale.str(round(price, 2))
             row["preco2"] = locale.str(round(price2, 2))
             row["estoque"] = "c"
             try:
-                sec_category = self._secondary_category_list[product_ident[1:3].lower()]
+                sec_category = self._secondary_categories[product_ident[1:3].lower()]
             except KeyError:
                 raise ProductCodeError(product_ident[1:3], i)
             row["descricao"] = "%s" %(sec_category)
@@ -137,7 +138,7 @@ class LojeProductGenerator(object):
             
     def _SentToPrinter(self, epl_code):
         from zebra import zebra
-        zebra = zebra('ZDesigner TLP 2844')
+        zebra = zebra(self._printer_name)
         zebra.output(epl_code)
         
 

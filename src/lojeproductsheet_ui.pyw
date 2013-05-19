@@ -11,6 +11,7 @@ import tkFileDialog
 import tkFont
 import tkMessageBox
 import tkSimpleDialog
+import sys
 
 
 #===================================================================================================
@@ -26,7 +27,7 @@ class LojeProductSheetUI(ttk.Frame):
         font = tkFont.Font(family='Simplified Arabic Fixed', size=11)
 
         manuf_frame = ttk.Frame(self)
-        manuf_frame.grid(row=0, columnspan=2, stick=ttk.W)
+        manuf_frame.grid(row=0, columnspan=2, stick=ttk.NW)
         manuf_label = ttk.Label(manuf_frame, text="Fábrica")
         manuf_label.pack(side=ttk.LEFT)
         self.manuf_entry = manuf_entry = ttk.Entry(manuf_frame, font=font)
@@ -41,27 +42,36 @@ class LojeProductSheetUI(ttk.Frame):
         fr = ttk.Frame(self)
         fr.grid(column=0, row=1, sticky=ttk.W)
         
-        btn_print = ttk.Button(self, text="Imprimir de Arquivo", command=self.PrintFromFile)
-        btn_print.grid(column=0, row=2, sticky=ttk.E)
-        btn_gen = ttk.Button(self, text="Gerar Saída", command=self.GenerateSheet)
-        btn_gen.grid(column=1, row=2, sticky=ttk.E)
+        frm_buttons = ttk.Frame(self)
+        frm_buttons.grid(row=2, columnspan=2, stick=ttk.NE)
+        pack_cfn = dict(padx=4, pady=4, side=ttk.LEFT)
+        btn_label = ttk.Button(frm_buttons, text="Imprimir Etiqueta", command=self.PrintLabel)
+        btn_label.pack(pack_cfn)
+        btn_print = ttk.Button(frm_buttons, text="Imprimir de Arquivo", command=self.PrintFromFile)
+        btn_print.pack(pack_cfn)
+        btn_gen = ttk.Button(frm_buttons, text="Gerar Saída", command=self.GenerateSheet)
+        btn_gen.pack(pack_cfn)
+        frm_buttons.pack()
         
         for child in self.winfo_children():
             child.grid_configure(padx=5, pady=5)
             
         self._last_dir = ""
-        app_dirname = os.path.dirname(__file__)
+        if hasattr(sys, "frozen"):
+            app_dirname = os.path.dirname(sys.executable)
+        else:
+            app_dirname = os.path.dirname(__file__)
         self._barcode_filename = os.path.join(app_dirname, "barcode")
         self._config_filename = os.path.join(app_dirname, "lps.ini")
 
         
     def GenerateSheet(self):
+        lps = LojeProductGenerator(self._config_filename)
         if not self._IsInputValid(): return
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
         manufacturer = self.manuf_entry.get()
         content = self.products_entry.get(1.0, ttk.END)
-        lps = LojeProductGenerator(self._config_filename)
         try:
             sheet = lps.GenerateLojeProductSheet(content.split(), initial_barcode, manufacturer)
         except ProductCodeError, exc:
@@ -84,6 +94,23 @@ class LojeProductSheetUI(ttk.Frame):
         sheet = lps.LoadSheet(sheet_filename)
         self._PrintLabels(lps, sheet)
         
+        
+    def PrintLabel(self):
+        lps = LojeProductGenerator(self._config_filename)
+        barcode = tkSimpleDialog.askinteger(self.MSG_TITLE, self.MSG_TYPE_BARCODE, parent=self)
+        if not barcode: return
+        ident = tkSimpleDialog.askstring(self.MSG_TITLE, self.MSG_IDENT_CODE, parent=self)
+        if not ident: return
+        count = tkSimpleDialog.askinteger(
+            self.MSG_TITLE, self.MSG_LABEL_COUNT, initialvalue=1, parent=self
+            )
+        if not count: return
+        try:
+            sheet = lps.GenerateLojeProductSheet([ident] * count, barcode)
+        except ProductCodeError, exc:
+            tkMessageBox.showerror(self.MSG_TITLE, exc)
+            return
+        self._PrintLabels(lps, sheet)
         
         
     def _IsInputValid(self):
@@ -109,7 +136,7 @@ class LojeProductSheetUI(ttk.Frame):
     def _AksInitialBarcode(self):
         initial_barcode = tkSimpleDialog.askinteger(
             self.MSG_TITLE, 
-            self.MSG_TYPE_BARCODE, 
+            self.MSG_TYPE_BARCODE + "Inicial", 
             initialvalue=self._AcquireInitialBarcode(), 
             parent=self)
         return initial_barcode
@@ -128,7 +155,9 @@ class LojeProductSheetUI(ttk.Frame):
 
 
     MSG_ASK_PRINT = "Arquivo criado com sucesso. Deseja imprimir etiquetas?"
-    MSG_TYPE_BARCODE = "Digite o Código de Barras Inicial"
+    MSG_TYPE_BARCODE = "Digite o Código de Barras"
+    MSG_IDENT_CODE = "Digite o Código de Identificação (ex.: ABL00090)"
+    MSG_LABEL_COUNT = "Digite o número de cópias desejadas"
     MSG_ASK_PRINT_MORE = "Imprimir mais %d etiquetas?"
     MSG_TITLE = "Entrade de Produtos Loje"
 
