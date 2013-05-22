@@ -34,7 +34,8 @@ class LojeProductGenerator(object):
         "preco2",
         "estoque",
         "descricao",
-        "fabricante"            
+        "fabricante",     
+        "categoria2",       
         ]
 
     
@@ -82,12 +83,13 @@ class LojeProductGenerator(object):
             row["custo"] = locale.str(round(cost, 2))
             row["preco"] = locale.str(round(price, 2))
             row["preco2"] = locale.str(round(price2, 2))
-            row["estoque"] = "c"
+            row["estoque"] = "v"
             try:
                 sec_category = self._secondary_categories[product_ident[1:3].lower()]
             except KeyError:
                 raise ProductCodeError(product_ident[1:3], i)
-            row["descricao"] = "%s" %(sec_category)
+            row["descricao"] = "%s %s" % (category, sec_category)
+            row["categoria2"] = sec_category
             row["fabricante"] = manufacturer
             sheet.append(row)
             previous_product_ident = product_ident
@@ -133,7 +135,7 @@ class LojeProductGenerator(object):
         for row in loje_product_sheet:
             label = self._GeneratLabelEpl(row) + "\n"
             stream.write(label)
-        return stream.getvalue()        
+        return stream.getvalue()
             
             
     def _SentToPrinter(self, epl_code):

@@ -45,11 +45,11 @@ class LojeProductSheetUI(ttk.Frame):
         frm_buttons = ttk.Frame(self)
         frm_buttons.grid(row=2, columnspan=2, stick=ttk.NE)
         pack_cfn = dict(padx=4, pady=4, side=ttk.LEFT)
-        btn_label = ttk.Button(frm_buttons, text="Imprimir Etiqueta", command=self.PrintLabel)
+        btn_label = ttk.Button(frm_buttons, text="Imprimir Apenas 1 Etiqueta", command=self.PrintLabel)
         btn_label.pack(pack_cfn)
-        btn_print = ttk.Button(frm_buttons, text="Imprimir de Arquivo", command=self.PrintFromFile)
+        btn_print = ttk.Button(frm_buttons, text="Imprimir de Arquivo do Loje", command=self.PrintFromFile)
         btn_print.pack(pack_cfn)
-        btn_gen = ttk.Button(frm_buttons, text="Gerar Saída", command=self.GenerateSheet)
+        btn_gen = ttk.Button(frm_buttons, text="Gerar Arquivo do Loje", command=self.GenerateSheet)
         btn_gen.pack(pack_cfn)
         frm_buttons.pack()
         
@@ -66,8 +66,8 @@ class LojeProductSheetUI(ttk.Frame):
 
         
     def GenerateSheet(self):
-        lps = LojeProductGenerator(self._config_filename)
-        if not self._IsInputValid(): return
+        lps = self._CreateLojeProductGenerator()
+        if lps is None or not self._IsInputValid(): return
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
         manufacturer = self.manuf_entry.get()
@@ -77,7 +77,12 @@ class LojeProductSheetUI(ttk.Frame):
         except ProductCodeError, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
-        filename = tkFileDialog.asksaveasfilename(initialdir=self._last_dir, title="", parent=self)
+        filename = tkFileDialog.asksaveasfilename(
+            initialdir=self._last_dir, 
+            title="", 
+            filetypes=[('Arquivo CSV', '*.csv')],
+            defaultextension=".csv",
+            parent=self)
         if not filename: return
         self._last_dir = os.path.dirname(filename)
         lps.WriteSheet(sheet, filename)
@@ -96,9 +101,9 @@ class LojeProductSheetUI(ttk.Frame):
         
         
     def PrintLabel(self):
-        lps = LojeProductGenerator(self._config_filename)
+        lps = self._CreateLojeProductGenerator()
         barcode = tkSimpleDialog.askinteger(self.MSG_TITLE, self.MSG_TYPE_BARCODE, parent=self)
-        if not barcode: return
+        if not (lps and barcode): return
         ident = tkSimpleDialog.askstring(self.MSG_TITLE, self.MSG_IDENT_CODE, parent=self)
         if not ident: return
         count = tkSimpleDialog.askinteger(
@@ -111,6 +116,16 @@ class LojeProductSheetUI(ttk.Frame):
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
         self._PrintLabels(lps, sheet)
+        
+        
+    def _CreateLojeProductGenerator(self):
+        try:
+            return LojeProductGenerator(self._config_filename)
+        except:
+            tkMessageBox.showerror(
+                self.MSG_TITLE,
+                "Erro ao ler arquivo de configuração (%s)" % os.path.basename(self._config_filename),
+                )        
         
         
     def _IsInputValid(self):
