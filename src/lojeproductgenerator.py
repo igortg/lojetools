@@ -54,17 +54,16 @@ class LojeProductGenerator(object):
         self._label_template = cfg_parser.get("Label", "label")
         self._printer_name = cfg_parser.get("Impressora", "nome")
         self._labels_per_file = 30
+        self._product_unity = "pç"
         
         
-    def GenerateLojeProductSheet(self, product_ident_list, start_index, manufacturer=""):
-        unity = "pç"
+    def GenerateLojeProductSheet(self, product_ident_list, start_index, manufacturer="", increase_index=True):
         sheet = []
         previous_product_ident = None
-        product_ident_list.sort()
         product_index = start_index - 1
-        for i, product_ident in enumerate(product_ident_list):
+        for product_ident in sorted(product_ident_list):
             row = {}
-            if product_ident != previous_product_ident:
+            if increase_index and product_ident != previous_product_ident:
                 product_index += 1            
             row[self.ID_HEADER] = product_index
             row[self.BARCODE_HEADER] = "%06d" %product_index
@@ -72,10 +71,10 @@ class LojeProductGenerator(object):
             try:
                 category = self._primary_categories[product_ident[0].lower()]
             except KeyError:
-                raise ProductCodeError(product_ident[0], i)
+                raise ProductCodeError(product_ident[0])
             row[self.CATEGORY_HEADER] = category
-            row["unidade compra"] = unity
-            row["unidade venda"] = unity
+            row["unidade compra"] = self._product_unity
+            row["unidade venda"] = self._product_unity
             price = float(product_ident[3:]) / 10.
             cost = price / self._price_list[0]
             price2 = cost * self._price_list[1]
@@ -87,7 +86,7 @@ class LojeProductGenerator(object):
             try:
                 sec_category = self._secondary_categories[product_ident[1:3].lower()]
             except KeyError:
-                raise ProductCodeError(product_ident[1:3], i)
+                raise ProductCodeError(product_ident[1:3])
             row["descricao"] = "%s %s" % (category, sec_category)
             row["categoria2"] = sec_category
             row["fabricante"] = manufacturer
@@ -168,8 +167,8 @@ class LojeProductGenerator(object):
 #===================================================================================================
 class ProductCodeError(Exception):
     
-    def __init__(self, code, index):
+    def __init__(self, ident):
         Exception.__init__(
             self,
-            "Nao foi possivel encontrar correspondencia para codigo '%s' (item %d)" %(code, index+1)
+            "Nao foi possivel encontrar correspondencia para codigo '%s'" % ident
         )

@@ -26,16 +26,20 @@ class LojeProductSheetUI(ttk.Frame):
         self.rowconfigure(0, weight=1)
         font = tkFont.Font(family='Simplified Arabic Fixed', size=11)
 
-        manuf_frame = ttk.Frame(self)
-        manuf_frame.grid(row=0, columnspan=2, stick=ttk.NW)
-        manuf_label = ttk.Label(manuf_frame, text="Fábrica")
-        manuf_label.pack(side=ttk.LEFT)
-        self.manuf_entry = manuf_entry = ttk.Entry(manuf_frame, font=font)
-        manuf_entry.pack(side=ttk.LEFT)
-        manuf_frame.pack()
+        manuf_label = ttk.Label(self, text="Fábrica")
+        manuf_label.grid(row=0, column=0)
+        self.manuf_entry = manuf_entry = ttk.Entry(self, font=font)
+        manuf_entry.grid(row=0, column=1, sticky=ttk.NW)
+        
+        price1_label = ttk.Label(self, text="Preço1")
+        price1_label.grid(row=1, column=0, sticky=ttk.NW)
+        price1_entry = ttk.Text(self, font=font)
+        price1_entry.grid(row=1, column=1, sticky=(ttk.NSEW))
 
-        products_entry = ttk.Text(self, font=font)
-        products_entry.grid(row=1, columnspan=2, sticky=(ttk.NSEW))
+        products_label = ttk.Label(self, text="Códigos")
+        products_label.grid(row=2, column=0, sticky=ttk.NW)
+        products_entry = self.products_entry = ttk.Text(self, font=font)
+        products_entry.grid(row=2, column=1, sticky=(ttk.NSEW))
         self.products_entry = products_entry
              
         #unused frame  
@@ -49,7 +53,7 @@ class LojeProductSheetUI(ttk.Frame):
         btn_label.pack(pack_cfn)
         btn_print = ttk.Button(frm_buttons, text="Imprimir de Arquivo do Loje", command=self.PrintFromFile)
         btn_print.pack(pack_cfn)
-        btn_gen = ttk.Button(frm_buttons, text="Gerar Arquivo do Loje", command=self.GenerateSheet)
+        btn_gen = ttk.Button(frm_buttons, text="Gerar Arquivo do Loje", command=self.GenerateLojeSheet)
         btn_gen.pack(pack_cfn)
         frm_buttons.pack()
         
@@ -63,17 +67,24 @@ class LojeProductSheetUI(ttk.Frame):
             app_dirname = os.path.dirname(__file__)
         self._barcode_filename = os.path.join(app_dirname, "barcode")
         self._config_filename = os.path.join(app_dirname, "lps.ini")
-
         
-    def GenerateSheet(self):
-        lps = self._CreateLojeProductGenerator()
-        if lps is None or not self._IsInputValid(): return
+        
+    def GenerateLojeSheet(self):
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
+        try:
+            self._GenerateSheet(initial_barcode)
+        except Exception, exc:
+            tkMessageBox.showerror(self.MSG_TITLE, exc)
+
+        
+    def _GenerateSheet(self, initial_index):
+        lps = self._CreateLojeProductGenerator()
+        if lps is None or not self._IsInputValid(): return
         manufacturer = self.manuf_entry.get()
         content = self.products_entry.get(1.0, ttk.END)
         try:
-            sheet = lps.GenerateLojeProductSheet(content.split(), initial_barcode, manufacturer)
+            sheet = lps.GenerateLojeProductSheet(content.split(), initial_index, manufacturer)
         except ProductCodeError, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
