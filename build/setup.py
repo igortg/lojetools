@@ -1,39 +1,30 @@
-from distutils.core import setup
-import py2exe
+from cx_Freeze import setup, Executable
+import os
+import shutil
+import sys
 
-  
-bin_excludes = [
-    "msvcr90.dll",
-    "msvcp90.dll",
-    "msvcr90d.dll",
-    "msvcp90d.dll",
-    "w9xpopen.exe"
-    "AVICAP32.dll", # DLLs included when building on Vista
-    "AVIFIL32.dll",
-    "dhcpcsvc6.dll",
-    "iphlpapi.dll",
-    "DNSAPI.dll",
-    "MSACM32.dll",
-    "MSVFW32.dll",
-    "NSI.dll",
-    "WINNSI.dll",
-]
+# Dependencies are automatically detected, but it might need fine tuning.
+build_exe_options = {
+    "compressed": True,
+    "append_script_to_exe": True,
+    "build_exe": "theves_etiquetas",
+    "silent": True,
+#     "include_files": [("../src/lps.ini", "lps.ini")] 
+}
 
+executable = Executable(
+    "../src/lojeproductsheet_ui.pyw",
+    base="Win32GUI",
+    targetName="theves_etiquetas.exe"
+    )
 
 setup(
-    name='Theves Etiquetas',
-    windows = [{
-        'dest_base'      : 'theves_etiquetas',
-        'script'         : '../src/lojeproductsheet_ui.pyw',
-    }],
-    options = {
-        "py2exe": {
-            "bundle_files" : 3, 
-            'dll_excludes' : bin_excludes,
-			'compressed'   : True,  # Compressed executable
-        }
-    },
-	# Uncomment the line below if you are using matplotlib
-	#data_files=matplotlib.get_py2exe_datafiles(),
-    # zipfile=None
-)
+    name = "theves_etiquetas",
+    version = "13.05",
+    description = "Theves Etiquetas",
+    options = {"build_exe": build_exe_options},
+    executables = [executable]
+    )
+
+
+shutil.make_archive("theves_etiquetas", "zip", root_dir=".", base_dir="theves_etiquetas")

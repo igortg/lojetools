@@ -1,9 +1,10 @@
 #-*- coding: latin1 -*-
 from ConfigParser import ConfigParser
-from string import Template
 from StringIO import StringIO
+from string import Template
 import csv
 import locale
+import os
 
 
 #===================================================================================================
@@ -41,14 +42,19 @@ class LojeProductGenerator(object):
     
     def __init__(self, config_filename):
         locale.setlocale(locale.LC_ALL, '')
+        assert os.path.isfile(config_filename), "Config file not found"
         cfg_parser = ConfigParser()
         cfg_parser.read(config_filename)
-        
+
         self._primary_categories = dict(cfg_parser.items(self.PRIMARY_CATEGORY_SEC))
         self._secondary_categories = dict(cfg_parser.items(self.SECONDARY_CATEGORY_SEC))
-        self._price_list = []
-        for opt in sorted(cfg_parser.options(self.PRICE_SEC)):
-            self._price_list.append(cfg_parser.getfloat(self.PRICE_SEC, opt))
+
+        if cfg_parser.has_section(self.PRICE_SEC):
+            self.price_list = []
+            for opt in sorted(cfg_parser.options(self.PRICE_SEC)):
+                self.price_list.append(cfg_parser.getfloat(self.PRICE_SEC, opt))
+        else:
+            self.price_list = [1.7, 2.21]
         
         self._label_header = cfg_parser.get("Label", "header").replace("\\n","\n")
         self._label_template = cfg_parser.get("Label", "label")
@@ -76,8 +82,8 @@ class LojeProductGenerator(object):
             row["unidade compra"] = self._product_unity
             row["unidade venda"] = self._product_unity
             price = float(product_ident[3:]) / 10.
-            cost = price / self._price_list[0]
-            price2 = cost * self._price_list[1]
+            cost = price / self.price_list[0]
+            price2 = cost * self.price_list[1]
             
             row["custo"] = locale.str(round(cost, 2))
             row["preco"] = locale.str(round(price, 2))

@@ -20,34 +20,42 @@ import sys
 class LojeProductSheetUI(ttk.Frame):
     
     def __init__(self, *args, **kw):
+        font = tkFont.Font(family='Simplified Arabic Fixed', size=11)
         ttk.Frame.__init__(self, *args, **kw)
         self.grid(column=0, row=0, sticky=ttk.NSEW)
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        font = tkFont.Font(family='Simplified Arabic Fixed', size=11)
+#         self.columnconfigure(0, weight=1)
+#         self.rowconfigure(0, weight=1)
 
         manuf_label = ttk.Label(self, text="Fábrica")
-        manuf_label.grid(row=0, column=0)
-        self.manuf_entry = manuf_entry = ttk.Entry(self, font=font)
+        manuf_label.grid(row=0, column=0, sticky=ttk.NW)
+        self.manuf_entry = manuf_entry = ttk.Entry(self)
         manuf_entry.grid(row=0, column=1, sticky=ttk.NW)
         
-        price1_label = ttk.Label(self, text="Preço1")
+        price1_label = ttk.Label(self, text="Preço1/Preço2")
         price1_label.grid(row=1, column=0, sticky=ttk.NW)
-        price1_entry = ttk.Text(self, font=font)
-        price1_entry.grid(row=1, column=1, sticky=(ttk.NSEW))
+        frm = ttk.Frame(self)
+        frm.grid(row=1, column=1, sticky=ttk.NW)
+        self.price1 = ttk.DoubleVar(0)
+        price1_entry = ttk.Entry(frm, textvariable=self.price1)
+        price1_entry.pack(side=ttk.LEFT)
+#         price1_entry.grid(row=1, column=1)
+        self.price2 = ttk.DoubleVar(0)
+        price2_entry = ttk.Entry(frm, textvariable=self.price2)
+#         price2_entry.grid(row=1, column=1)
+        price2_entry.pack( padx=4, side=ttk.LEFT)
 
         products_label = ttk.Label(self, text="Códigos")
         products_label.grid(row=2, column=0, sticky=ttk.NW)
         products_entry = self.products_entry = ttk.Text(self, font=font)
-        products_entry.grid(row=2, column=1, sticky=(ttk.NSEW))
+        products_entry.grid(row=2, column=1, columnspan=2, sticky=(ttk.NSEW))
         self.products_entry = products_entry
              
         #unused frame  
         fr = ttk.Frame(self)
-        fr.grid(column=0, row=1, sticky=ttk.W)
+        fr.grid(column=0, row=3, sticky=ttk.W)
         
         frm_buttons = ttk.Frame(self)
-        frm_buttons.grid(row=2, columnspan=2, stick=ttk.NE)
+        frm_buttons.grid(row=3, columnspan=3, stick=ttk.NE)
         pack_cfn = dict(padx=4, pady=4, side=ttk.LEFT)
         btn_label = ttk.Button(frm_buttons, text="Imprimir Apenas 1 Etiqueta", command=self.PrintLabel)
         btn_label.pack(pack_cfn)
@@ -68,6 +76,10 @@ class LojeProductSheetUI(ttk.Frame):
         self._barcode_filename = os.path.join(app_dirname, "barcode")
         self._config_filename = os.path.join(app_dirname, "lps.ini")
         
+        lpg = self._CreateLojeProductGenerator()
+        self.price1.set(lpg.price_list[0])
+        self.price2.set(lpg.price_list[1])
+        
         
     def GenerateLojeSheet(self):
         initial_barcode = self._AksInitialBarcode()
@@ -79,12 +91,14 @@ class LojeProductSheetUI(ttk.Frame):
 
         
     def _GenerateSheet(self, initial_index):
-        lps = self._CreateLojeProductGenerator()
-        if lps is None or not self._IsInputValid(): return
+        lpg = self._CreateLojeProductGenerator()
+        if lpg is None or not self._IsInputValid(): return
         manufacturer = self.manuf_entry.get()
         content = self.products_entry.get(1.0, ttk.END)
+        lpg.price_list[0] = self.price1.get()
+        lpg.price_list[1] = self.price2.get()
         try:
-            sheet = lps.GenerateLojeProductSheet(content.split(), initial_index, manufacturer)
+            sheet = lpg.GenerateLojeProductSheet(content.split(), initial_index, manufacturer)
         except ProductCodeError, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
@@ -96,11 +110,11 @@ class LojeProductSheetUI(ttk.Frame):
             parent=self)
         if not filename: return
         self._last_dir = os.path.dirname(filename)
-        lps.WriteSheet(sheet, filename)
+        lpg.WriteSheet(sheet, filename)
         self._WriteInitialBarcode(int(sheet[-1]['codbar']) + 1)
         answ_print = tkMessageBox.askyesno(self.MSG_TITLE, self.MSG_ASK_PRINT)
         if answ_print:
-            self._PrintLabels(lps, sheet)
+            self._PrintLabels(lpg, sheet)
             
             
     def PrintFromFile(self):
@@ -132,11 +146,12 @@ class LojeProductSheetUI(ttk.Frame):
     def _CreateLojeProductGenerator(self):
         try:
             return LojeProductGenerator(self._config_filename)
-        except:
+        except Exception, exc:
             tkMessageBox.showerror(
                 self.MSG_TITLE,
-                "Erro ao ler arquivo de configuração (%s)" % os.path.basename(self._config_filename),
-                )        
+                "Erro ao ler arquivo de configuração: %s" % exc,
+                )
+                    
         
         
     def _IsInputValid(self):

@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-.settings
-*.pyc
-=======
 *.py[cod]
 
 # C extensions
@@ -11,7 +7,6 @@
 *.egg
 *.egg-info
 dist
-build
 eggs
 parts
 bin
@@ -35,6 +30,4 @@ nosetests.xml
 
 # Mr Developer
 .mr.developer.cfg
-.project
-.pydevproject
->>>>>>> 9fca369a293de8a8e555e09e3fb8be5f97450176
+.settings
