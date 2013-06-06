@@ -149,14 +149,16 @@ class LojeProductSheetUI(ttk.Frame):
 
     def _PrintLabels(self, lps, sheet):
         batch_size = 30
-        batch_num = (len(sheet) - 1) / batch_size + 1
-        for i in range(batch_num):
+        batch_count = (len(sheet) - 1) / batch_size + 1
+        for i in range(batch_count):
             start = i * batch_size
             end = (i + 1) * batch_size
             part_sheet = sheet[start:end]
             lps.PrintSheet(part_sheet)
-            if i < batch_num - 1:
-                tkMessageBox.askokcancel(self.MSG_TITLE, self.MSG_ASK_PRINT_MORE %batch_size)
+            is_last_batch = i == batch_count - 1
+            ask_more_text = self.MSG_ASK_PRINT_MORE %batch_size
+            if not is_last_batch and not tkMessageBox.askokcancel(self.MSG_TITLE, ask_more_text):
+                break
         
     
     def _AksInitialBarcode(self):
