@@ -1,4 +1,4 @@
-from lojeproductgenerator import LojeProductGenerator, ProductCodeError
+from product_data_generator.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import unittest
 
 
