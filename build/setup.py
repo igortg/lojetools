@@ -13,7 +13,7 @@ build_exe_options = {
 }
 
 executable = Executable(
-    "../src/lojeproductsheet_ui.pyw",
+    "../src/product_data_generator/main.py",
     base="Win32GUI",
     targetName="theves_etiquetas.exe"
     )

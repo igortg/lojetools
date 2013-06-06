@@ -4,14 +4,14 @@ Created on 30/12/2012
 
 @author: igor
 '''
-from lojeproductgenerator import LojeProductGenerator, ProductCodeError
+from product_data_generator.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import Tkinter as ttk
 import os
+import sys
 import tkFileDialog
 import tkFont
 import tkMessageBox
 import tkSimpleDialog
-import sys
 
 
 #===================================================================================================
@@ -204,14 +204,3 @@ class LojeProductSheetUI(ttk.Frame):
     MSG_ASK_PRINT_MORE = "Imprimir mais %d etiquetas?"
     MSG_TITLE = "Entrade de Produtos Loje"
 
-
-#===================================================================================================
-# main
-#===================================================================================================
-if __name__ == '__main__':    
-    root = ttk.Tk()
-    root.title(LojeProductSheetUI.MSG_TITLE)
-    root.columnconfigure(0, weight=1)
-    root.rowconfigure(0, weight=1)
-    mainframe = LojeProductSheetUI(root)
-    root.mainloop()
