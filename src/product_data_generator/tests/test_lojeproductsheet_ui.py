@@ -1,5 +1,5 @@
-from lojeproductgenerator import LojeProductGenerator
-from lojeproductsheet_ui import LojeProductSheetUI
+from product_data_generator.lojeproductgenerator import LojeProductGenerator
+from product_data_generator.lojeproductsheet_ui import LojeProductSheetUI
 import Tkinter as ttk
 import sys
 import unittest
@@ -20,10 +20,12 @@ class TestCase(unittest.TestCase):
         widget = self.widget
         for x in range(40):
             widget.products_entry.insert(ttk.END, "ABL00%d0\n" %x)
-        widget.GenerateLojeSheet()
+#         self._root.mainloop()
         
 
 
-        
+#===================================================================================================
+# main        
+#===================================================================================================
 if __name__ == '__main__':
     unittest.main()
