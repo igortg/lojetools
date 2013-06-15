@@ -4,14 +4,14 @@ Created on 30/12/2012
 
 @author: igor
 '''
-from labelprinter.lojeproductgenerator import LojeProductGenerator, ProductCodeError
+from product_data_generator.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import Tkinter as ttk
 import os
+import sys
 import tkFileDialog
 import tkFont
 import tkMessageBox
 import tkSimpleDialog
-import sys
 
 
 #===================================================================================================
@@ -84,10 +84,10 @@ class LojeProductSheetUI(ttk.Frame):
     def GenerateLojeSheet(self):
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
-        try:
-            self._GenerateSheet(initial_barcode)
-        except Exception, exc:
-            tkMessageBox.showerror(self.MSG_TITLE, exc)
+#        try:
+        self._GenerateSheet(initial_barcode)
+#        except Exception, exc:
+#            tkMessageBox.showerror(self.MSG_TITLE, exc)
 
         
     def _GenerateSheet(self, initial_index):
@@ -98,7 +98,7 @@ class LojeProductSheetUI(ttk.Frame):
         lpg.price_list[0] = self.price1.get()
         lpg.price_list[1] = self.price2.get()
         try:
-            sheet = lpg.GenerateLojeProductSheet(content.split(), initial_index, manufacturer)
+            sheet = lpg.GenerateLojeProductSheet(content.split("\n"), initial_index, manufacturer)
         except ProductCodeError, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
             return
@@ -151,9 +151,8 @@ class LojeProductSheetUI(ttk.Frame):
                 self.MSG_TITLE,
                 "Erro ao ler arquivo de configuração: %s" % exc,
                 )
-                    
-        
-        
+
+
     def _IsInputValid(self):
         content = self.products_entry.get(1.0, ttk.END)
         if not content.strip():
@@ -204,14 +203,3 @@ class LojeProductSheetUI(ttk.Frame):
     MSG_ASK_PRINT_MORE = "Imprimir mais %d etiquetas?"
     MSG_TITLE = "Entrade de Produtos Loje"
 
-
-#===================================================================================================
-# main
-#===================================================================================================
-if __name__ == '__main__':    
-    root = ttk.Tk()
-    root.title(LojeProductSheetUI.MSG_TITLE)
-    root.columnconfigure(0, weight=1)
-    root.rowconfigure(0, weight=1)
-    mainframe = LojeProductSheetUI(root)
-    root.mainloop()

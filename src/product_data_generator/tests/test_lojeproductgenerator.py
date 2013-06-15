@@ -1,4 +1,4 @@
-from labelprinter.lojeproductgenerator import LojeProductGenerator, ProductCodeError
+from product_data_generator.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import unittest
 
 
@@ -29,7 +29,6 @@ class TestLojeProductGenerator(unittest.TestCase):
         self.assertEqual(sheet[1][lps.QUANTITY_HEADER], 1)
         self.assertEqual(sheet[2][lps.ID_HEADER], 12)
         self.assertEqual(sheet[2][lps.QUANTITY_HEADER], 3)
-        lps._GenerateEplFile(sheet, "lps")
         
         
     def testGenerateLojeProductSheetErrorHandling(self):

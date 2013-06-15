@@ -25,7 +25,7 @@ class LojeProductGenerator(object):
     QUANTITY_HEADER = "count"
     
     HEADER_LIST = [
-        ID_HEADER,
+#        ID_HEADER,
         BARCODE_HEADER,
         IDENT_HEADER,
         CATEGORY_HEADER,
@@ -36,8 +36,9 @@ class LojeProductGenerator(object):
         "preco2",
         "estoque",
         "descricao",
-        "fabricante",     
-        "categoria2",       
+        "fabricante",
+        "categoria2",
+        QUANTITY_HEADER,
         ]
 
     
@@ -68,6 +69,7 @@ class LojeProductGenerator(object):
         sheet = []
         product_index = start_index - 1
         product_ident_list = self._ProcessProductQuantities(product_ident_list)
+        print product_ident_list
         for product_ident, quantity in product_ident_list:
             row = {}
             product_index += 1            
@@ -104,6 +106,8 @@ class LojeProductGenerator(object):
     def _ProcessProductQuantities(self, product_ident_list):
         quantity_list = []
         for line in sorted(product_ident_list):
+            if not line.strip():
+                continue
             try:
                 product_ident, quantity = line.split()
             except ValueError:
@@ -125,7 +129,8 @@ class LojeProductGenerator(object):
                 self.HEADER_LIST,
                 delimiter=self.CSV_DELIMITER,
                 lineterminator="\n",
-                quoting=csv.QUOTE_ALL 
+                quoting=csv.QUOTE_ALL,
+                extrasaction='ignore',
                 )
             writer.writeheader()
             writer.writerows(sheet)
