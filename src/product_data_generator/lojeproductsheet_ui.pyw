@@ -84,10 +84,10 @@ class LojeProductSheetUI(ttk.Frame):
     def GenerateLojeSheet(self):
         initial_barcode = self._AksInitialBarcode()
         if not initial_barcode: return
-#        try:
-        self._GenerateSheet(initial_barcode)
-#        except Exception, exc:
-#            tkMessageBox.showerror(self.MSG_TITLE, exc)
+        try:
+            self._GenerateSheet(initial_barcode)
+        except Exception, exc:
+            tkMessageBox.showerror(self.MSG_TITLE, exc)
 
         
     def _GenerateSheet(self, initial_index):
