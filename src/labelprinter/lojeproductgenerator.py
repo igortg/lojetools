@@ -22,6 +22,7 @@ class LojeProductGenerator(object):
     IDENT_HEADER = "identificacao"
     ID_HEADER = "id"
     CATEGORY_HEADER = "categoria"
+    QUANTITY_HEADER = "count"
     
     HEADER_LIST = [
         ID_HEADER,
@@ -65,12 +66,11 @@ class LojeProductGenerator(object):
         
     def GenerateLojeProductSheet(self, product_ident_list, start_index, manufacturer="", increase_index=True):
         sheet = []
-        previous_product_ident = None
         product_index = start_index - 1
-        for product_ident in sorted(product_ident_list):
+        product_ident_list = self._ProcessProductQuantities(product_ident_list)
+        for product_ident, quantity in product_ident_list:
             row = {}
-            if increase_index and product_ident != previous_product_ident:
-                product_index += 1            
+            product_index += 1            
             row[self.ID_HEADER] = product_index
             row[self.BARCODE_HEADER] = "%06d" %product_index
             row[self.IDENT_HEADER] = product_ident.upper()
@@ -96,9 +96,26 @@ class LojeProductGenerator(object):
             row["descricao"] = "%s %s" % (category, sec_category)
             row["categoria2"] = sec_category
             row["fabricante"] = manufacturer
+            row[self.QUANTITY_HEADER] = quantity
             sheet.append(row)
-            previous_product_ident = product_ident
         return sheet
+    
+    
+    def _ProcessProductQuantities(self, product_ident_list):
+        quantity_list = []
+        for line in sorted(product_ident_list):
+            try:
+                product_ident, quantity = line.split()
+            except ValueError:
+                product_ident, quantity = line, 1
+            product_ident = product_ident.strip().upper()
+            quantity = int(quantity)
+            if len(quantity_list) and product_ident == quantity_list[-1][0]:
+                new_quantity = quantity_list[-1][1] + quantity
+                quantity_list[-1] = (product_ident, new_quantity)
+            else:
+                quantity_list.append((product_ident, quantity))
+        return quantity_list
     
     
     def WriteSheet(self, sheet, out_filename):
@@ -138,8 +155,9 @@ class LojeProductGenerator(object):
         header = self._label_header + "\n"
         stream.write(header)
         for row in loje_product_sheet:
-            label = self._GeneratLabelEpl(row) + "\n"
-            stream.write(label)
+            for _ in range(row[self.QUANTITY_HEADER]):
+                label = self._GeneratLabelEpl(row) + "\n"
+                stream.write(label)
         return stream.getvalue()
             
             
@@ -147,20 +165,6 @@ class LojeProductGenerator(object):
         from zebra import zebra
         zebra = zebra(self._printer_name)
         zebra.output(epl_code)
-        
-
-    def _GenerateEplFile(self, loje_product_sheet, out_basename):
-        file_index = 0
-        prn_file = None
-        for i, row in enumerate(loje_product_sheet):
-            if i % self._labels_per_file == 0:
-                file_index += 1
-                if prn_file:
-                    prn_file.close()
-                prn_filename = out_basename + "-%02d.epl" %file_index
-                prn_file = open(prn_filename, "w")
-                prn_file.write(self._label_header + "\n")
-            prn_file.write(self._GeneratLabelEpl(row) + "\n")
 
 
     def _GeneratLabelEpl(self, row):
