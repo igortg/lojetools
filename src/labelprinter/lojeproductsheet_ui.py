@@ -4,7 +4,7 @@ Created on 30/12/2012
 
 @author: igor
 '''
-from lojeproductgenerator import LojeProductGenerator, ProductCodeError
+from labelprinter.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import Tkinter as ttk
 import os
 import tkFileDialog
