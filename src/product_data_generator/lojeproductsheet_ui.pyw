@@ -111,10 +111,13 @@ class LojeProductSheetUI(ttk.Frame):
         if not filename: return
         self._last_dir = os.path.dirname(filename)
         lpg.WriteSheet(sheet, filename)
-        self._WriteInitialBarcode(int(sheet[-1]['codbar']) + 1)
+        self._WriteInitialBarcode(int(sheet[-1][lpg.ID_HEADER]) + 1)
         answ_print = tkMessageBox.askyesno(self.MSG_TITLE, self.MSG_ASK_PRINT)
         if answ_print:
             self._PrintLabels(lpg, sheet)
+        self.clipboard_clear()
+        self.clipboard_append(os.path.normpath(filename))
+        tkMessageBox.showinfo(self.MSG_TITLE, "ATENÇÃO: Importe o arquivo gerado no Loje imediatamente!")
             
             
     def PrintFromFile(self):

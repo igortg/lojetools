@@ -18,13 +18,14 @@ class TestCase(unittest.TestCase):
         
     def testMet1(self):
         widget = self.widget
-        self._root.mainloop()
-#        for x in range(40):
-#            widget.products_entry.insert(ttk.END, "ABL00%d0\n" %x)
-#        widget.GenerateLojeSheet()
+        for x in range(40):
+            widget.products_entry.insert(ttk.END, "ABL00%d0\n" %x)
+#         self._root.mainloop()
         
 
 
-        
+#===================================================================================================
+# main        
+#===================================================================================================
 if __name__ == '__main__':
     unittest.main()

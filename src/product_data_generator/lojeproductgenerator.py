@@ -63,6 +63,7 @@ class LojeProductGenerator(object):
         self._printer_name = cfg_parser.get("Impressora", "nome")
         self._labels_per_file = 30
         self._product_unity = "pç"
+        self._category_on_label = cfg_parser.getint("Geral", "cat_etiqueta")
         
         
     def GenerateLojeProductSheet(self, product_ident_list, start_index, manufacturer="", increase_index=True):
@@ -74,7 +75,17 @@ class LojeProductGenerator(object):
             row = {}
             product_index += 1            
             row[self.ID_HEADER] = product_index
-            row[self.BARCODE_HEADER] = "%06d" %product_index
+            if self._category_on_label:
+                barcode = "%s%06d" % (product_ident[0].upper(), product_index)
+                try:
+                    int(barcode)
+                except ValueError:
+                    pass
+                else:
+                    raise RuntimeError("Product Barcode couldn't be an Integer")
+            else:
+                barcode = "%06d" % product_index
+            row[self.BARCODE_HEADER] = barcode
             row[self.IDENT_HEADER] = product_ident.upper()
             try:
                 category = self._primary_categories[product_ident[0].lower()]
