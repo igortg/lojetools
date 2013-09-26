@@ -150,9 +150,11 @@ class LojeProductGenerator(object):
     @classmethod            
     def LoadSheet(cls, sheet_filename):
         with open(sheet_filename) as sheet_file:
+            header_line = sheet_file.readline()
+            header = [col.strip('"') for col in header_line.split(";")]
             reader = csv.DictReader(
                 sheet_file,
-                cls.HEADER_LIST,
+                header,
                 delimiter=cls.CSV_DELIMITER,
                 lineterminator="\n",
                 quoting=csv.QUOTE_ALL,
@@ -171,7 +173,8 @@ class LojeProductGenerator(object):
         header = self._label_header + "\n"
         stream.write(header)
         for row in loje_product_sheet:
-            for _ in range(row[self.QUANTITY_HEADER]):
+            count = int(row.get(self.QUANTITY_HEADER, 1))
+            for _ in range(count):
                 label = self._GeneratLabelEpl(row) + "\n"
                 stream.write(label)
         return stream.getvalue()
