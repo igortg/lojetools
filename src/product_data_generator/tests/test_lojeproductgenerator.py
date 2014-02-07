@@ -1,15 +1,14 @@
+import os
 from product_data_generator.lojeproductgenerator import LojeProductGenerator, ProductCodeError
 import unittest
 
 
-#===================================================================================================
-# TestLojeProductSheet
-#===================================================================================================
 class TestLojeProductGenerator(unittest.TestCase):
     
     
     def setUp(self):
-        self.lps = LojeProductGenerator("../lps.ini")
+        test_dir = os.path.dirname(__file__)
+        self.lps = LojeProductGenerator(os.path.join(test_dir, "lps.ini"))
     
     
     def testGenerateLojeProducts(self):

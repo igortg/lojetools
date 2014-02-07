@@ -13,7 +13,7 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self._root = ttk.Tk()
         self.widget = LojeProductSheetUI(self._root)
-        LojeProductGenerator._SentToPrinter = lambda s,out: sys.stdout.write(out)
+        LojeProductGenerator._SendToPrinter = lambda s,out: sys.stdout.write(out)
     
         
     def testMet1(self):

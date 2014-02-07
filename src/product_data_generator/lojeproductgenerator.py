@@ -1,10 +1,14 @@
 #-*- coding: latin1 -*-
 from ConfigParser import ConfigParser
 from StringIO import StringIO
+import re
 from string import Template
 import csv
+import socket
+
 import locale
 import os
+
 
 
 #===================================================================================================
@@ -165,7 +169,7 @@ class LojeProductGenerator(object):
                 
     def PrintSheet(self, loje_product_sheet):
         epl_code = self._GenerateEpl(loje_product_sheet)
-        self._SentToPrinter(epl_code)
+        self._SendToPrinter(epl_code)
             
             
     def _GenerateEpl(self, loje_product_sheet):
@@ -180,9 +184,11 @@ class LojeProductGenerator(object):
         return stream.getvalue()
             
             
-    def _SentToPrinter(self, epl_code):
+    def _SendToPrinter(self, epl_code):
         from zebra import zebra
-        zebra = zebra(self._printer_name)
+        host_addr = r"\\\\{0}\\".format(socket.gethostname().lower())
+        local_name = re.sub(self._printer_name, "", host_addr)
+        zebra = zebra(local_name)
         zebra.output(epl_code)
 
 
