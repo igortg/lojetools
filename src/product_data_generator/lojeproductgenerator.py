@@ -1,21 +1,17 @@
 #-*- coding: latin1 -*-
 from ConfigParser import ConfigParser
 from StringIO import StringIO
-import re
 from string import Template
 import csv
 import socket
 
+import re
 import locale
 import os
 
 
-
-#===================================================================================================
-# LojeProductGenerator
-#===================================================================================================
 class LojeProductGenerator(object):
-    
+
     PRICE_SEC = "Preco"
     PRIMARY_CATEGORY_SEC = "Categoria1"
     SECONDARY_CATEGORY_SEC = "Categoria2"
@@ -29,7 +25,6 @@ class LojeProductGenerator(object):
     QUANTITY_HEADER = "count"
     
     HEADER_LIST = [
-#        ID_HEADER,
         BARCODE_HEADER,
         IDENT_HEADER,
         CATEGORY_HEADER,
@@ -49,8 +44,19 @@ class LojeProductGenerator(object):
     def __init__(self, config_filename):
         locale.setlocale(locale.LC_ALL, '')
         assert os.path.isfile(config_filename), "Config file not found"
+        local_config_parser = ConfigParser()
+        local_config_parser.read(config_filename)
+        product_info_filename = local_config_parser.get("Config", "info_produtos")
+        self._printer_name = local_config_parser.get("Config", "impressora")
+        assert os.path.isfile(product_info_filename), "Product info file not found"
+        # Set barcode filename
+        self._barcode_filename = os.path.join(
+            os.path.dirname(product_info_filename),
+            "barcode"
+        )
+
         cfg_parser = ConfigParser()
-        cfg_parser.read(config_filename)
+        cfg_parser.read(product_info_filename)
 
         self._primary_categories = dict(cfg_parser.items(self.PRIMARY_CATEGORY_SEC))
         self._secondary_categories = dict(cfg_parser.items(self.SECONDARY_CATEGORY_SEC))
@@ -64,7 +70,6 @@ class LojeProductGenerator(object):
         
         self._label_header = cfg_parser.get("Label", "header").replace("\\n","\n")
         self._label_template = cfg_parser.get("Label", "label")
-        self._printer_name = cfg_parser.get("Impressora", "nome")
         self._labels_per_file = 30
         self._product_unity = "pç"
         self._category_on_label = cfg_parser.getint("Geral", "cat_etiqueta")
@@ -170,8 +175,20 @@ class LojeProductGenerator(object):
     def PrintSheet(self, loje_product_sheet):
         epl_code = self._GenerateEpl(loje_product_sheet)
         self._SendToPrinter(epl_code)
-            
-            
+
+
+    def WriteInitialBarcode(self, barcode):
+        with open(self._barcode_filename, 'w') as barcode_file:
+            barcode_file.write('%d' %barcode)
+
+
+    def AcquireInitialBarcode(self):
+        if not os.path.isfile(self._barcode_filename):
+            self.WriteInitialBarcode(1)
+        with open(self._barcode_filename) as barcode_file:
+            return int(barcode_file.read().strip())
+
+
     def _GenerateEpl(self, loje_product_sheet):
         stream = StringIO()
         header = self._label_header + "\n"
@@ -197,9 +214,6 @@ class LojeProductGenerator(object):
         return template.substitute(**row)
 
 
-#===================================================================================================
-# ProductCodeError
-#===================================================================================================
 class ProductCodeError(Exception):
     
     def __init__(self, ident):

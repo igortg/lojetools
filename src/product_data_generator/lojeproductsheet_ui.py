@@ -82,16 +82,16 @@ class LojeProductSheetUI(ttk.Frame):
         
         
     def GenerateLojeSheet(self):
-        initial_barcode = self._AksInitialBarcode()
-        if not initial_barcode: return
         try:
-            self._GenerateSheet(initial_barcode)
+            self._GenerateSheet()
         except Exception, exc:
             tkMessageBox.showerror(self.MSG_TITLE, exc)
 
         
-    def _GenerateSheet(self, initial_index):
+    def _GenerateSheet(self, ):
         lpg = self._CreateLojeProductGenerator()
+        initial_index = self._AskInitialBarcode(lpg)
+        if not initial_index: return
         if lpg is None or not self._IsInputValid(): return
         manufacturer = self.manuf_entry.get()
         content = self.products_entry.get(1.0, ttk.END)
@@ -111,14 +111,14 @@ class LojeProductSheetUI(ttk.Frame):
         if not filename: return
         self._last_dir = os.path.dirname(filename)
         lpg.WriteSheet(sheet, filename)
-        self._WriteInitialBarcode(int(sheet[-1][lpg.ID_HEADER]) + 1)
+        lpg.WriteInitialBarcode(int(sheet[-1][lpg.ID_HEADER]) + 1)
         answ_print = tkMessageBox.askyesno(self.MSG_TITLE, self.MSG_ASK_PRINT)
         if answ_print:
             self._PrintLabels(lpg, sheet)
         self.clipboard_clear()
         self.clipboard_append(os.path.normpath(filename))
         tkMessageBox.showinfo(self.MSG_TITLE, "ATENÇÃO: Importe o arquivo gerado no Loje imediatamente!")
-            
+
             
     def PrintFromFile(self):
         sheet_filename = tkFileDialog.askopenfilename()
@@ -178,31 +178,18 @@ class LojeProductSheetUI(ttk.Frame):
                 break
         
     
-    def _AksInitialBarcode(self):
+    def _AskInitialBarcode(self, lpg):
         initial_barcode = tkSimpleDialog.askinteger(
             self.MSG_TITLE, 
             self.MSG_TYPE_BARCODE + "Inicial", 
-            initialvalue=self._AcquireInitialBarcode(), 
+            initialvalue=lpg.AcquireInitialBarcode(),
             parent=self)
         return initial_barcode
     
     
-    def _AcquireInitialBarcode(self):
-        if not os.path.isfile(self._barcode_filename):
-            self._WriteInitialBarcode(1)
-        with open(self._barcode_filename) as barcode_file:
-            return int(barcode_file.read().strip())
-                
-                
-    def _WriteInitialBarcode(self, barcode):
-        with open(self._barcode_filename, 'w') as barcode_file:
-            barcode_file.write('%d' %barcode)
-
-
     MSG_ASK_PRINT = "Arquivo criado com sucesso. Deseja imprimir etiquetas?"
     MSG_TYPE_BARCODE = "Digite o Código de Barras"
     MSG_IDENT_CODE = "Digite o Código de Identificação (ex.: ABL00090)"
     MSG_LABEL_COUNT = "Digite o número de cópias desejadas"
     MSG_ASK_PRINT_MORE = "Imprimir mais %d etiquetas?"
     MSG_TITLE = "Entrade de Produtos Loje"
-

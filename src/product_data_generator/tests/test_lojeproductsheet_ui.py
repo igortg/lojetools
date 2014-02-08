@@ -20,7 +20,7 @@ class TestCase(unittest.TestCase):
         widget = self.widget
         for x in range(40):
             widget.products_entry.insert(ttk.END, "ABL00%d0\n" %x)
-#         self._root.mainloop()
+        self._root.mainloop()
         
 
 

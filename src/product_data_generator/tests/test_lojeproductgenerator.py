@@ -7,10 +7,10 @@ class TestLojeProductGenerator(unittest.TestCase):
     
     
     def setUp(self):
-        test_dir = os.path.dirname(__file__)
-        self.lps = LojeProductGenerator(os.path.join(test_dir, "lps.ini"))
-    
-    
+        self.test_dirname = os.path.dirname(__file__)
+        self.lps = LojeProductGenerator(os.path.join(self.test_dirname, "lps.ini"))
+
+
     def testGenerateLojeProducts(self):
         test_list = [
          "ppt00235",
@@ -54,14 +54,14 @@ class TestLojeProductGenerator(unittest.TestCase):
         
         
     def testLoadSheet(self):
-        sheet_filename = "test.out.csv"
+        sheet_filename = os.path.join(self.test_dirname, "test.out.csv")
         lps = self.lps
         sheet = lps.LoadSheet(sheet_filename)
         self.assertEqual(sheet[0]['codbar'], "000300")
         self.assertEqual(sheet[1]['codbar'], "000301")
         
 
-    def test(self):
+    def testHash(self):
         d2 = ord('z') - ord('a')
         d1 = ord('c') - ord('a')
         d2, d1
