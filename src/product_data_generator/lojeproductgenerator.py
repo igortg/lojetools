@@ -203,9 +203,7 @@ class LojeProductGenerator(object):
             
     def _SendToPrinter(self, epl_code):
         from zebra import zebra
-        host_addr = r"\\\\{0}\\".format(socket.gethostname().lower())
-        local_name = re.sub(self._printer_name, "", host_addr)
-        zebra = zebra(local_name)
+        zebra = zebra(self._printer_name)
         zebra.output(epl_code)
 
 

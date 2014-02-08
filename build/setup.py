@@ -9,7 +9,7 @@ build_exe_options = {
     "append_script_to_exe": True,
     "build_exe": "theves_etiquetas",
     "silent": True,
-#     "include_files": [("../src/lps.ini", "lps.ini")] 
+#     "include_files": [("../src/lps.ini", "lps.ini")]
 }
 
 executable = Executable(
